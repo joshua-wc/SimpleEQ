@@ -74,6 +74,7 @@ void RotarySliderWithLabels::paint(juce::Graphics& g)
 
     auto sliderBounds = getSliderBounds();
 
+
     //g.setColour(Colours::red);
     //g.drawRect(getLocalBounds());
     //g.setColour(Colours::yellow);
@@ -81,6 +82,32 @@ void RotarySliderWithLabels::paint(juce::Graphics& g)
 
     getLookAndFeel().drawRotarySlider(g, sliderBounds.getX(), sliderBounds.getY(), sliderBounds.getWidth(), sliderBounds.getHeight(),
         jmap(getValue(), range.getStart(), range.getEnd(), 0.0, 1.0), startAng, endAng, *this);
+
+    auto centre = sliderBounds.toFloat().getCentre();
+    auto radius = sliderBounds.getWidth() * 0.5f;
+
+    g.setColour(Colour(0u, 172u, 1u));
+    g.setFont(getTextHeight());
+
+    auto numChoices = labels.size();
+    for (int i = 0; i < numChoices; ++i)
+    {
+        auto pos = labels[i].pos;
+        jassert(0.f <= pos);
+        jassert(pos <= 1.f);
+
+        auto ang = jmap(pos, 0.f, 1.f, startAng, endAng);
+
+        auto c = centre.getPointOnCircumference(radius + getTextHeight() * 0.5f + 1, ang);
+
+        Rectangle<float> r;
+        auto str = labels[i].label;
+        r.setSize(g.getCurrentFont().getStringWidth(str), getTextHeight());
+        r.setCentre(c);
+        r.setY(r.getY() + getTextHeight());
+
+        g.drawFittedText(str, r.toNearestInt(), juce::Justification::centred, 1);
+    }
 }
 
 juce::Rectangle<int> RotarySliderWithLabels::getSliderBounds() const
@@ -284,6 +311,9 @@ SimpleEQAudioProcessorEditor::SimpleEQAudioProcessorEditor (SimpleEQAudioProcess
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
+
+    peakFreqSlider.labels.add({ 0.f, "20Hz" });
+    peakFreqSlider.labels.add({ 1.f, "20kHz" });
 
     for (auto* comp : getComps())
     {
